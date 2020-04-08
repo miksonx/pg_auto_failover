@@ -132,6 +132,7 @@ class Cluster:
         if self.monitor:
             self.monitor.destroy()
         self.vlan.destroy()
+        time.sleep(5)
 
 
 class PGNode:
@@ -194,6 +195,7 @@ class PGNode:
         """
         self.pg_autoctl = PGAutoCtl(self.vnode, self.datadir)
         self.pg_autoctl.run()
+        self.wait_until_pg_is_running()
 
     def running(self):
         return self.pg_autoctl and self.pg_autoctl.run_proc
@@ -362,12 +364,10 @@ class PGNode:
         Waits until the underlying Postgres process is running.
         """
         wait_until = dt.datetime.now() + dt.timedelta(seconds=timeout)
-        time.sleep(1)
         while wait_until > dt.datetime.now():
             if self.pg_is_running():
-                time.sleep(1)
                 return True
-            time.sleep(1)
+            time.sleep(0.1)
 
         print("Postgres is still not running in %s after %d seconds" %
               (self.datadir, timeout))
@@ -569,6 +569,7 @@ class DataNode(PGNode):
         self.pg_autoctl = PGAutoCtl(self.vnode, self.datadir, create_args)
         if run:
             self.pg_autoctl.run()
+            self.wait_until_pg_is_running()
         else:
             self.pg_autoctl.execute("pg_autoctl create")
 
